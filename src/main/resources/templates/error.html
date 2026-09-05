@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Something went wrong · VoteKante')}"></head>
+<body>
+<main class="auth-page">
+    <div class="auth-card" style="text-align:center;">
+        <div style="width:64px;height:64px;border-radius:50%;background:#e8eef2;display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem;">
+            <span style="font-size:1.6rem;">⚠️</span>
+        </div>
+        <h1 class="auth-title">Oops</h1>
+        <p class="auth-sub" th:text="${message ?: 'Something went wrong. Please try again.'}">Error</p>
+        <div style="display:flex; gap:0.75rem; justify-content:center;">
+            <a class="btn btn-primary" th:href="@{/}">Back to start</a>
+            <a class="btn btn-ghost" th:href="@{/results}">Results</a>
+        </div>
+    </div>
+</main>
+</body>
+</html>

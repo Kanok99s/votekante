@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Parties · VoteKante')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+
+<div th:replace="~{fragments :: alerts}"></div>
+
+<main class="page">
+    <p class="small"><a th:href="@{/admin/elections}">← Back to elections</a></p>
+    <h1 th:text="${election.name}">Election</h1>
+    <p class="muted" style="margin-top:-0.25rem;">
+        <span th:text="${election.open} ? 'Ballots are being accepted — the candidate list is locked.' : 'Voting is closed — candidates can be edited.'"></span>
+    </p>
+
+    <div class="alert alert-info" th:if="${election.open}">
+        This election is open. Adding, editing or deleting parties requires closing it first.
+    </div>
+
+    <!-- add party -->
+    <section class="card">
+        <h3>Add a party</h3>
+        <form th:action="@{/admin/elections/{id}/parties(id=${election.id})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="row">
+                <div class="field">
+                    <label for="name">Party name</label>
+                    <input type="text" id="name" name="name" required maxlength="120"
+                           placeholder="e.g. Green Future"/>
+                </div>
+                <div class="field">
+                    <label for="description">Description (optional)</label>
+                    <input type="text" id="description" name="description" maxlength="500"
+                           placeholder="Short platform summary"/>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" th:disabled="${election.open}">Add party</button>
+        </form>
+    </section>
+
+    <!-- list parties -->
+    <section class="section">
+        <div class="empty" th:if="${#lists.isEmpty(parties)}">
+            <div class="empty-icon">📋</div>
+            <strong>No parties in this election yet.</strong><br/>
+            <span class="small">Add at least one before opening voting.</span>
+        </div>
+
+        <div class="table-wrap" th:if="${!#lists.isEmpty(parties)}">
+            <table class="data">
+                <thead>
+                <tr>
+                    <th>Party</th>
+                    <th>Description</th>
+                    <th class="actions">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${parties}">
+                    <td><strong th:text="${p.name}">Name</strong></td>
+                    <td class="muted" th:text="${p.description}">Desc</td>
+                    <td class="actions">
+                        <a class="btn btn-sm btn-ghost" th:href="@{/admin/parties/{id}/edit(id=${p.id})}">Edit</a>
+                        <form style="display:inline" th:action="@{/admin/parties/{id}/delete(id=${p.id})}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn btn-sm btn-danger" th:disabled="${election.open}"
+                                    onclick="return confirm('Delete this party from the ballot?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

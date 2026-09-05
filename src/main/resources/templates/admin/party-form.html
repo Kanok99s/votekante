@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Edit party · VoteKante')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+
+<main class="page" style="max-width:720px;">
+    <p class="small"><a th:href="@{/admin/elections/{id}/parties(id=${party.election.id})}">← Back to parties</a></p>
+    <h1>Edit party</h1>
+
+    <div class="card">
+        <form th:action="@{/admin/parties/{id}/edit(id=${party.id})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="field">
+                <label for="name">Party name</label>
+                <input type="text" id="name" name="name" required maxlength="120"
+                       th:value="${party.name}"/>
+            </div>
+            <div class="field">
+                <label for="description">Description (optional)</label>
+                <input type="text" id="description" name="description" maxlength="500"
+                       th:value="${party.description}"/>
+            </div>
+            <div class="field">
+                <label for="electionId">Election</label>
+                <select id="electionId" name="electionId">
+                    <option th:each="e : ${elections}"
+                            th:value="${e.id}"
+                            th:selected="${e.id == party.election.id}"
+                            th:text="${e.name}">Election</option>
+                </select>
+            </div>
+            <div class="alert alert-error" th:if="${party.election.open}">
+                This party belongs to an open election — save it under another (closed) election
+                or close voting first.
+            </div>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

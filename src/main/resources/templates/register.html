@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Create account · VoteKante')}"></head>
+<body>
+<main class="auth-page">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <span class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 12.5l2 2 4-4.5"/>
+                    <rect x="3.5" y="4" width="17" height="16" rx="3"/>
+                </svg>
+            </span>
+        </div>
+        <h1 class="auth-title">Register to vote</h1>
+        <p class="auth-sub">New accounts are voters only. Admins are provisioned by the system.</p>
+
+        <div th:if="${error}" class="alert alert-error" th:text="${error}">Error</div>
+
+        <form th:action="@{/perform-register}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="field">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" autocomplete="username"
+                       required minlength="3" maxlength="60" th:value="${username}"
+                       placeholder="At least 3 characters"/>
+            </div>
+            <div class="field">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password"
+                       autocomplete="new-password" required minlength="6"
+                       placeholder="At least 6 characters"/>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Create account</button>
+        </form>
+
+        <p class="auth-switch">Already registered? <a th:href="@{/login}">Sign in</a></p>
+    </div>
+</main>
+</body>
+</html>

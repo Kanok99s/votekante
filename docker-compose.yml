@@ -1,0 +1,58 @@
+# ---------------------------------------------------------------------------
+# VoteKante — one-command local run for anyone who clones the repo.
+#
+#   Prerequisite: Docker (Desktop on macOS/Windows, docker + docker compose
+#   plugin on Linux). Java, Maven and MySQL are NOT needed.
+#
+#   Run:            docker compose up --build
+#   Open:           http://localhost:8080
+#   Stop:           docker compose down
+#   Wipe all data:  docker compose down -v
+#
+#   Credentials can be overridden via a .env file next to this one
+#   (see README). Defaults: admin / admin123, MySQL user votekante.
+# ---------------------------------------------------------------------------
+name: votekante
+
+services:
+  # ------------------------------------------------------------------ MySQL
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: votekante
+      MYSQL_USER: votekante
+      MYSQL_PASSWORD: ${DB_PASSWORD:-votekante}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}
+    ports:
+      # Host port is configurable in case you already run MySQL on 3306.
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - votekante_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  # ------------------------------------------------------------------- app
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # "db" is the MySQL service's hostname inside the compose network.
+      DB_URL: jdbc:mysql://db:3306/votekante?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: votekante
+      DB_PASSWORD: ${DB_PASSWORD:-votekante}
+      SEED_DEMO: ${SEED_DEMO:-true}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+    ports:
+      - "8080:8080"
+
+volumes:
+  votekante_mysql:

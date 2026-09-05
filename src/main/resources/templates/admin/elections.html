@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Manage elections · VoteKante')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+
+<div th:replace="~{fragments :: alerts}"></div>
+
+<main class="page">
+    <h1>Elections</h1>
+    <p class="muted" style="margin-top:-0.25rem;">Create elections, add parties, then open voting. While an
+        election is open, its candidate list is locked.</p>
+
+    <!-- create -->
+    <section class="card">
+        <h3>Create an election</h3>
+        <form th:action="@{/admin/elections}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="row">
+                <div class="field">
+                    <label for="name">Election name</label>
+                    <input type="text" id="name" name="name" required maxlength="120"
+                           placeholder="e.g. Municipal Council 2026"/>
+                </div>
+                <div class="field">
+                    <label for="description">Description (optional)</label>
+                    <input type="text" id="description" name="description" maxlength="500"
+                           placeholder="What is this election about?"/>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Create election</button>
+        </form>
+    </section>
+
+    <!-- list -->
+    <section class="section">
+        <div class="empty" th:if="${#lists.isEmpty(elections)}">
+            <div class="empty-icon">🗳️</div>
+            <strong>No elections yet.</strong>
+        </div>
+
+        <div class="table-wrap" th:if="${!#lists.isEmpty(elections)}">
+            <table class="data">
+                <thead>
+                <tr>
+                    <th>Election</th>
+                    <th class="num">Parties</th>
+                    <th class="num">Status</th>
+                    <th class="actions">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="e : ${elections}">
+                    <td>
+                        <strong th:text="${e.name}">Name</strong>
+                        <div class="muted small" th:text="${e.description}">Desc</div>
+                    </td>
+                    <td class="num" th:text="${#lists.size(e.parties)}">0</td>
+                    <td class="num">
+                        <span class="badge" th:classappend="${e.open} ? 'badge-open' : 'badge-closed'"
+                              th:text="${e.open} ? 'Open' : 'Closed'">Open</span>
+                    </td>
+                    <td class="actions">
+                        <a class="btn btn-sm btn-ghost" th:href="@{/admin/elections/{id}/parties(id=${e.id})}">Parties</a>
+                        <a class="btn btn-sm btn-ghost" th:href="@{/results/{id}(id=${e.id})}">Results</a>
+                        <form style="display:inline" th:action="@{/admin/elections/{id}/toggle(id=${e.id})}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn btn-sm"
+                                    th:classappend="${e.open} ? 'btn-danger' : 'btn-dark'"
+                                    th:text="${e.open} ? 'Close voting' : 'Open voting'">Open</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

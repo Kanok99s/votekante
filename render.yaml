@@ -1,0 +1,46 @@
+# --------------------------------------------------------------------------
+# VoteKante — Render "Blueprint" definition.
+#
+# Deploys the Docker image and points it at an externally hosted MySQL.
+# Render does NOT offer managed MySQL, so before the app can boot you must
+# create a free/paid MySQL instance elsewhere (Aiven, Railway, DigitalOcean,
+# Clever Cloud, AWS RDS, ...) and then fill DB_URL / DB_USERNAME / DB_PASSWORD
+# in the Render dashboard for this service ("sync: false" = you set them).
+#
+# Deploy steps (one-time):
+#   1. Push this project to GitHub (the repo root must contain this file,
+#      the Dockerfile and docker-compose.yml — i.e. push the contents of the
+#      project folder, not a parent folder).
+#   2. Render dashboard -> "New +" -> "Blueprint" -> pick the repository.
+#   3. After the service is created, open it -> Environment and set:
+#        DB_URL        e.g. jdbc:mysql://<host>:3306/votekante?useSSL=true&serverTimezone=UTC
+#        DB_USERNAME   your MySQL user
+#        DB_PASSWORD   your MySQL password
+#        ADMIN_USERNAME / ADMIN_PASSWORD   (strong admin credentials)
+#      SEED_DEMO=false keeps demo data off the live site.
+#   4. Render redeploys automatically; health check is GET /hello.
+# --------------------------------------------------------------------------
+services:
+  - type: web
+    name: votekante
+    runtime: docker
+    plan: free
+    rootDir: .
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /hello
+    envVars:
+      # PORT is injected automatically by Render for web services.
+      # Set these in the Render dashboard -> Environment:
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # Optional: disable demo data on the live site.
+      - key: SEED_DEMO
+        value: "false"

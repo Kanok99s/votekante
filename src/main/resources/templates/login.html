@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Sign in · VoteKante')}"></head>
+<body>
+<main class="auth-page">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <span class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 12.5l2 2 4-4.5"/>
+                    <rect x="3.5" y="4" width="17" height="16" rx="3"/>
+                </svg>
+            </span>
+        </div>
+        <h1 class="auth-title">Welcome back</h1>
+        <p class="auth-sub">Sign in to vote in open elections.</p>
+
+        <div th:if="${param.error}" class="alert alert-error">
+            Invalid username or password. Please try again.
+        </div>
+        <div th:if="${param.logout}" class="alert alert-ok">
+            You have been signed out.
+        </div>
+        <div th:if="${param.registered}" class="alert alert-ok">
+            Account created. You can now sign in.
+        </div>
+
+        <form th:action="@{/perform-login}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="field">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" autocomplete="username"
+                       required autofocus placeholder="e.g. alice"/>
+            </div>
+            <div class="field">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password"
+                       autocomplete="current-password" required placeholder="••••••••"/>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+        </form>
+
+        <p class="auth-switch">New here? <a th:href="@{/register}">Create a voter account</a></p>
+    </div>
+</main>
+</body>
+</html>
