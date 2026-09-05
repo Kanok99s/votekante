@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments :: head('Your ballot · VoteKante')}"></head>
+<head th:replace="~{fragments :: head(${signedIn ? 'Your ballot · VoteKante' : 'Live polls · VoteKante'})}"></head>
 <body>
 <header th:replace="~{fragments :: header}"></header>
 
@@ -9,13 +9,17 @@
 <main class="page">
     <div class="subhead">
         <div>
-            <h1>Your ballot</h1>
-            <p class="muted" style="margin-top:-0.25rem;">
-                Pick one option per open poll or election. Every vote is stored anonymously — not even an
-                administrator can see who voted for what.
+            <h1 th:text="${signedIn ? 'Your ballot' : 'Live polls and votes'}">Live polls</h1>
+            <p class="muted" style="margin-top:-0.25rem;"
+               th:text="${signedIn ? 'Pick one option per open poll or election. Every vote is stored anonymously — not even an administrator can see who voted for what.' : 'Anyone can watch the polls below in real time. Casting your own vote (or starting a poll) takes a free account — one person, one vote.'}">
+                Public dashboard
             </p>
         </div>
-        <a class="btn btn-dark" th:href="@{/polls/new}">+ Create a poll</a>
+        <div class="pill-list" th:if="${!signedIn}">
+            <a class="btn btn-primary" th:href="@{/login}">Sign in to vote</a>
+            <a class="btn btn-dark" th:href="@{/register}">Create an account</a>
+        </div>
+        <a class="btn btn-dark" th:if="${signedIn}" th:href="@{/polls/new}">+ Create a poll</a>
     </div>
 
     <!-- join a shared poll -->
@@ -33,16 +37,18 @@
                    style="text-transform:uppercase"/>
             <button type="submit" class="btn btn-primary">Join</button>
         </form>
-        <a class="btn btn-ghost btn-sm" th:href="@{/polls/mine}">My polls</a>
+        <a class="btn btn-ghost btn-sm" th:if="${signedIn}" th:href="@{/polls/mine}">My polls</a>
+        <a class="btn btn-ghost btn-sm" th:if="${!signedIn}" th:href="@{/register}">Create an account</a>
     </section>
 
     <!-- no open polls -->
     <div class="empty" th:if="${#lists.isEmpty(ballots)}">
         <div class="empty-icon">🗳️</div>
         <strong>No poll or election is open right now.</strong><br/>
-        <span class="small">Create one and share your code, or check the latest results.</span>
+        <span class="small" th:text="${signedIn ? 'Create one and share your code, or check the latest results.' : 'Check the latest results, or create an account and start the first poll.'}">no polls</span>
         <div class="mt-2 pill-list" style="justify-content:center;">
-            <a class="btn btn-primary btn-sm" th:href="@{/polls/new}">Create a poll</a>
+            <a class="btn btn-primary btn-sm" th:if="${!signedIn}" th:href="@{/register}">Create an account</a>
+            <a class="btn btn-primary btn-sm" th:if="${signedIn}" th:href="@{/polls/new}">Create a poll</a>
             <a class="btn btn-ghost btn-sm" th:href="@{/results}">View results</a>
         </div>
     </div>
@@ -60,12 +66,15 @@
                         <span class="small muted">by @<span th:text="${item.election.creator.username}">creator</span></span>
                         <span class="code-chip" th:text="${'#' + item.election.joinCode}">CODE</span>
                     </div>
+                    <div class="poll-meta" th:if="${!item.election.community}">
+                        <span class="badge badge-closed" style="background:#eef3f6;color:var(--navy);">Official election</span>
+                    </div>
                 </div>
                 <span class="badge" th:classappend="${item.alreadyVoted} ? 'badge-voted' : 'badge-open'"
                       th:text="${item.alreadyVoted} ? 'You voted' : 'Open'">Open</span>
             </div>
 
-            <!-- already voted: show notice, never re-offer the ballot -->
+            <!-- already voted (signed-in voter): show notice, never re-offer the ballot -->
             <div th:if="${item.alreadyVoted}" class="ballot-voted mt-2">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
                      stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
@@ -78,8 +87,8 @@
                    th:href="@{/results/{id}(id=${item.election.id})}">View results</a>
             </div>
 
-            <!-- ballot form -->
-            <form th:unless="${item.alreadyVoted}"
+            <!-- signed-in ballot form -->
+            <form th:if="${signedIn && !item.alreadyVoted}"
                   th:action="@{/voter/vote}" method="post">
                 <input type="hidden" name="electionId" th:value="${item.election.id}"/>
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
@@ -113,6 +122,29 @@
                     identifier — there is no link back to your account.
                 </p>
             </form>
+
+            <!-- guest preview (read-only) -->
+            <div th:if="${!signedIn}" class="mt-2">
+                <ul class="options-preview" th:if="${!#lists.isEmpty(item.parties)}">
+                    <li th:each="party : ${item.parties}">
+                        <span class="dot" aria-hidden="true"></span>
+                        <span>
+                            <span class="option-name" th:text="${party.name}">Option</span>
+                            <span class="option-desc" th:if="${!#strings.isEmpty(party.description)}"
+                                  th:text="${party.description}">Description</span>
+                        </span>
+                    </li>
+                </ul>
+                <div class="empty small" th:if="${#lists.isEmpty(item.parties)}">
+                    This poll has no options yet.
+                </div>
+                <div class="guest-cta">
+                    <span class="small muted">See how it's going — and make your voice count:</span>
+                    <a class="btn btn-primary btn-sm" th:href="@{/login}">Sign in to vote</a>
+                    <a class="btn btn-ghost btn-sm"
+                       th:href="@{/results/{id}(id=${item.election.id})}">View results</a>
+                </div>
+            </div>
         </article>
     </section>
 </main>

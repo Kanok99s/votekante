@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Poll · VoteKante')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+
+<div th:replace="~{fragments :: alerts}"></div>
+
+<main class="page">
+
+    <!-- question hero -->
+    <section class="results-hero">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap:wrap;">
+            <span class="badge badge-open" th:text="${election.open ? 'Open for voting' : 'Closed'}">Open</span>
+            <span class="small" style="color:rgba(255,255,255,0.7);">
+                <span th:text="${totalVotes}">0</span> ballot<span th:if="${totalVotes != 1}">s</span> so far
+            </span>
+        </div>
+        <h1 style="margin-top:0.9rem;" th:text="${election.name}">Question</h1>
+        <p th:if="${!#strings.isEmpty(election.description)}" style="color:rgba(255,255,255,0.85); margin-bottom:0.5rem;"
+           th:text="${election.description}">Description</p>
+        <div class="meta" style="margin-top:0.4rem;">
+            <span th:if="${election.community}">
+                Community poll by @<strong style="color:#fff;"><span th:text="${election.creator.username}">creator</span></strong>
+                · code <span class="code-chip code-chip-light" th:text="${election.joinCode}">K7X2Q4</span>
+            </span>
+            <span th:if="${!election.community}">Official election</span>
+        </div>
+    </section>
+
+    <!-- what can you do here? -->
+    <section class="card" th:if="${election.open}">
+        <div th:if="${!signedIn}" class="cta-inline">
+            <div>
+                <strong>Want to have your say?</strong>
+                <p class="muted small mb-0" style="margin-top:0.15rem;">
+                    Votes are anonymous and counted exactly once per account. Join free to cast your ballot.
+                </p>
+            </div>
+            <div class="pill-list">
+                <a class="btn btn-primary" th:href="@{/login}">Sign in to vote</a>
+                <a class="btn btn-ghost" th:href="@{/register}">Create an account</a>
+            </div>
+        </div>
+        <div th:if="${signedIn && !canVote}" class="cta-inline">
+            <div>
+                <strong>You're signed in as an administrator.</strong>
+                <p class="muted small mb-0" style="margin-top:0.15rem;">
+                    Only voter accounts cast ballots. Sign in with a voter account to take part in this poll.
+                </p>
+            </div>
+            <a class="btn btn-primary" th:href="@{/results/{id}(id=${election.id})}">View results</a>
+        </div>
+        <div th:if="${canVote && !alreadyVoted}" class="cta-inline">
+            <div>
+                <strong>This poll is open — you haven't voted yet.</strong>
+                <p class="muted small mb-0" style="margin-top:0.15rem;">
+                    One vote per account, stored anonymously.
+                </p>
+            </div>
+            <a class="btn btn-primary" th:href="@{/join/{code}(code=${election.joinCode})}">Vote on this poll</a>
+        </div>
+        <div th:if="${canVote && alreadyVoted}" class="cta-inline">
+            <div>
+                <strong>Your ballot is in. Thank you! 🎉</strong>
+                <p class="muted small mb-0" style="margin-top:0.15rem;">
+                    To keep votes anonymous we never show which option you chose.
+                </p>
+            </div>
+            <a class="btn btn-primary" th:href="@{/results/{id}(id=${election.id})}">Full results</a>
+        </div>
+    </section>
+
+    <!-- live tally -->
+    <section class="card">
+        <h3>Current tally</h3>
+        <div th:if="${#lists.isEmpty(rows)}" class="empty small">
+            This poll has no answer options yet.
+        </div>
+        <div th:each="row : ${rows}">
+            <div class="bar-row">
+                <span class="bar-label" th:text="${row.partyName}">Option</span>
+                <div class="bar-track">
+                    <div class="bar-fill" th:if="${totalVotes > 0}"
+                         th:style="|width: ${row.votes * 100.0 / totalVotes}%|"></div>
+                </div>
+                <span class="bar-count" th:text="${row.votes}">0</span>
+            </div>
+        </div>
+        <p class="muted small mb-0" th:if="${totalVotes == 0}">
+            No votes yet — the first ballot will appear here instantly.
+        </p>
+        <a class="btn btn-ghost btn-sm mt-2" th:if="${totalVotes > 0}"
+           th:href="@{/results/{id}(id=${election.id})}">View chart &amp; full results</a>
+    </section>
+
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

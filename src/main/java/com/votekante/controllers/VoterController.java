@@ -83,6 +83,7 @@ public class VoterController {
                 .toList();
 
         model.addAttribute("ballots", items);
+        model.addAttribute("signedIn", true);
         return "voter/dashboard";
     }
 

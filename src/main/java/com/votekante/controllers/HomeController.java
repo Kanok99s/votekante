@@ -15,10 +15,19 @@ public class HomeController {
 
     @GetMapping("/")
     public String root(Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()) {
+        if (authentication != null && isRealUser(authentication)) {
             return "redirect:/dashboard";
         }
-        return "redirect:/login";
+        // Logged-out visitors (e.g. recruiters from a CV) land on the public
+        // polls dashboard instead of a login wall.
+        return "redirect:/polls/browse";
+    }
+
+    /** Anonymous sessions are technically "authenticated" - require a real role. */
+    private boolean isRealUser(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("ROLE_VOTER") || a.equals("ROLE_ADMIN"));
     }
 
     @GetMapping(value = "/hello", produces = "text/plain")

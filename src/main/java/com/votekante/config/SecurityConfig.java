@@ -72,11 +72,16 @@ public class SecurityConfig {
                         "/favicon.ico", "/error").permitAll()
                 // Public authentication pages
                 .requestMatchers("/login", "/perform-login", "/register", "/perform-register").permitAll()
+                // Public browsing: anyone may view the dashboard of open polls,
+                // jump to a shared poll by code, or watch results live. Voting,
+                // creating polls and managing polls still require an account
+                // (see the role rules below and anyRequest().authenticated()).
+                .requestMatchers("/polls/browse", "/poll/**", "/polls/join", "/join/**",
+                        "/results", "/results/**").permitAll()
                 // Role-based areas
                 .requestMatchers("/voter", "/voter/**").hasRole("VOTER")
                 .requestMatchers("/admin", "/admin/**").hasRole("ADMIN")
-                // Results visible to every signed-in user (voters and admins)
-                .requestMatchers("/results", "/results/**").authenticated()
+                // Everything else (create/manage polls, account pages…) needs sign-in
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

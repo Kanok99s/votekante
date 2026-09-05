@@ -158,14 +158,18 @@ public class PollController {
             poll = pollService.findByCode(code);
         } catch (VoteException e) {
             ra.addFlashAttribute("error", e.getMessage());
-            return "redirect:/dashboard";
+            return "redirect:/polls/browse";
         }
-        // Closed polls (or finished voting) land straight on the live results.
-        if (!poll.isOpen() || !isVoter(auth)) {
+        // Closed polls land straight on the (public) final results.
+        if (!poll.isOpen()) {
             return "redirect:/results/" + poll.getId();
         }
-        ra.addFlashAttribute("ok", "Joined \"" + poll.getName() + "\" - cast your vote below.");
-        // Fragment anchors the ballot card for that poll on the dashboard.
-        return "redirect:/voter/dashboard#poll-" + poll.getId();
+        // Signed-in voters go to their ballot, anchored on this poll's card.
+        if (isVoter(auth)) {
+            ra.addFlashAttribute("ok", "Joined \"" + poll.getName() + "\" - cast your vote below.");
+            return "redirect:/voter/dashboard#poll-" + poll.getId();
+        }
+        // Guests and admins get the public poll page (sign-in CTA + live tally).
+        return "redirect:/poll/" + poll.getJoinCode();
     }
 }

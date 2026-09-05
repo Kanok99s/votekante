@@ -30,8 +30,12 @@ public class Election {
     @Column(length = 500)
     private String description;
 
-    /** The signed-in user who created this community poll; null for official elections. */
-    @ManyToOne(fetch = FetchType.LAZY)
+    /**
+     * The signed-in user who created this community poll; null for official
+     * elections. Eager so public pages can render the creator badge without
+     * a second query/session.
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "creator_id")
     private User creator;
 
