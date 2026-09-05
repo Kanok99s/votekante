@@ -53,7 +53,11 @@
                 <tr th:each="e : ${elections}">
                     <td>
                         <strong th:text="${e.name}">Name</strong>
-                        <div class="muted small" th:text="${e.description}">Desc</div>
+                        <div class="muted small" th:if="${e.community}">
+                            Community poll by @<span th:text="${e.creator.username}">creator</span>
+                            · code <span th:text="${e.joinCode}">CODE</span>
+                        </div>
+                        <div class="muted small" th:unless="${e.community}" th:text="${e.description}">Desc</div>
                     </td>
                     <td class="num" th:text="${#lists.size(e.parties)}">0</td>
                     <td class="num">

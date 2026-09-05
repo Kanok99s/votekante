@@ -25,6 +25,8 @@
         <nav class="main-nav" aria-label="Main">
             <a sec:authorize="hasRole('VOTER')" th:href="@{/voter}">Vote</a>
             <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/elections}">Manage</a>
+            <a sec:authorize="isAuthenticated()" th:href="@{/polls/new}">Create poll</a>
+            <a sec:authorize="isAuthenticated()" th:href="@{/polls/mine}">My polls</a>
             <a sec:authorize="isAuthenticated()" th:href="@{/results}">Results</a>
         </nav>
 

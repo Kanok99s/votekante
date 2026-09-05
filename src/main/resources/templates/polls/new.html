@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Create a poll · VoteKante')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+
+<div th:replace="~{fragments :: alerts}"></div>
+
+<main class="page">
+    <div class="subhead">
+        <div>
+            <h1>Create a community poll</h1>
+            <p class="muted" style="margin-top:-0.25rem;">
+                Ask a question, add answer options, and share your code. The poll opens instantly —
+                every vote is anonymous and every account can vote once.
+            </p>
+        </div>
+        <a class="btn btn-ghost" th:href="@{/polls/mine}">My polls</a>
+    </div>
+
+    <section class="card">
+        <form th:action="@{/polls}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <div class="field">
+                <label for="question">Your question</label>
+                <input type="text" id="question" name="question" required maxlength="120"
+                       th:value="${question}" placeholder="e.g. Which T-shirt design should our team pick?"
+                       autofocus/>
+                <p class="hint">Keep it short — this is what voters see on their ballot.</p>
+            </div>
+
+            <div class="field">
+                <label for="description">Description (optional)</label>
+                <input type="text" id="description" name="description" maxlength="500"
+                       th:value="${description}" placeholder="Any context voters should know?"/>
+            </div>
+
+            <div class="field">
+                <label>Answer options <span class="muted small">(2 to 12)</span></label>
+                <div id="optionRows">
+                    <div class="option-row" th:each="opt, stat : ${optionRows}">
+                        <span class="option-index" th:text="${stat.count}">1</span>
+                        <input class="option-input" type="text" name="options" maxlength="120" required
+                               placeholder="Answer option" th:value="${opt}"/>
+                        <button type="button" class="remove-option" aria-label="Remove this option"
+                                th:disabled="${#lists.size(optionRows) <= 2}">×</button>
+                    </div>
+                </div>
+                <p class="hint">Options appear in this order on everyone's ballot.</p>
+                <button type="button" id="addOption" class="btn btn-ghost btn-sm mt-1"
+                        th:hidden="${#lists.size(optionRows) >= 12}">+ Add an option</button>
+            </div>
+
+            <div class="mt-2" style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                <button type="submit" class="btn btn-primary">Launch poll</button>
+                <a class="btn btn-ghost" th:href="@{/dashboard}">Cancel</a>
+            </div>
+        </form>
+    </section>
+
+    <p class="muted small" style="margin-top:1rem;">
+        🔒 Community polls keep the same guarantees as official elections: your choice is stored with no
+        link back to your account, and only the total counts are ever shown.
+    </p>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+
+<script>
+    (function () {
+        const rowsBox = document.getElementById('optionRows');
+        const addBtn = document.getElementById('addOption');
+        const MAX = 12;
+
+        function renumber() {
+            const rows = rowsBox.querySelectorAll('.option-row');
+            rows.forEach((row, i) => {
+                const idx = row.querySelector('.option-index');
+                const rem = row.querySelector('.remove-option');
+                if (idx) idx.textContent = i + 1;
+                if (rem) rem.disabled = rows.length <= 2;
+            });
+            if (addBtn) addBtn.hidden = rows.length >= MAX;
+        }
+
+        addBtn.addEventListener('click', function () {
+            const row = document.createElement('div');
+            row.className = 'option-row';
+            row.innerHTML =
+                '<span class="option-index"></span>' +
+                '<input type="text" name="options" maxlength="120" required class="option-input" placeholder="Answer option"/>' +
+                '<button type="button" class="remove-option" aria-label="Remove this option">×</button>';
+            rowsBox.appendChild(row);
+            renumber();
+            row.querySelector('input').focus();
+        });
+
+        rowsBox.addEventListener('click', function (ev) {
+            const btn = ev.target.closest('.remove-option');
+            if (!btn || btn.disabled) return;
+            const row = btn.closest('.option-row');
+            if (rowsBox.querySelectorAll('.option-row').length <= 2) return;
+            row.remove();
+            renumber();
+        });
+
+        renumber();
+    })();
+</script>
+</body>
+</html>

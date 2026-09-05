@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('My polls · VoteKante')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+
+<div th:replace="~{fragments :: alerts}"></div>
+
+<main class="page">
+    <div class="subhead">
+        <div>
+            <h1>My polls</h1>
+            <p class="muted" style="margin-top:-0.25rem;">
+                Launch polls, share their codes, close voting when you have your answer, and watch results
+                update live.
+            </p>
+        </div>
+        <a class="btn btn-primary" th:href="@{/polls/new}">+ Create a poll</a>
+    </div>
+
+    <section class="section">
+        <div class="empty" th:if="${#lists.isEmpty(rows)}">
+            <div class="empty-icon">🗳️</div>
+            <strong>You have not created any polls yet.</strong><br/>
+            <span class="small">Launch one now — it will be open for everyone to vote on instantly.</span>
+            <div class="mt-2">
+                <a class="btn btn-primary btn-sm" th:href="@{/polls/new}">Create your first poll</a>
+            </div>
+        </div>
+
+        <div class="table-wrap" th:if="${!#lists.isEmpty(rows)}">
+            <table class="data">
+                <thead>
+                <tr>
+                    <th>Question</th>
+                    <th>Share</th>
+                    <th class="num">Options</th>
+                    <th class="num">Votes</th>
+                    <th class="num">Status</th>
+                    <th class="actions">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="row : ${rows}">
+                    <td>
+                        <strong th:text="${row.election.name}">Question</strong>
+                        <div class="muted small" th:if="${!#strings.isEmpty(row.election.description)}"
+                             th:text="${row.election.description}">Desc</div>
+                    </td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:0.4rem;">
+                            <span class="code-chip" th:text="${row.election.joinCode}">CODE</span>
+                            <button type="button" class="btn btn-sm btn-ghost share-btn"
+                                    th:attr="data-code=${row.election.joinCode}"
+                                    onclick="copyShare(this)">
+                                Share
+                            </button>
+                        </div>
+                        <div class="muted small" th:text="${'link: /join/' + row.election.joinCode}">link</div>
+                    </td>
+                    <td class="num" th:text="${row.options}">0</td>
+                    <td class="num" th:text="${row.votes}">0</td>
+                    <td class="num">
+                        <span class="badge" th:classappend="${row.election.open} ? 'badge-open' : 'badge-closed'"
+                              th:text="${row.election.open} ? 'Open' : 'Closed'">Open</span>
+                    </td>
+                    <td class="actions">
+                        <a class="btn btn-sm btn-ghost"
+                           th:href="@{/results/{id}(id=${row.election.id})}">Results</a>
+                        <form style="display:inline"
+                              th:action="@{/polls/{id}/toggle(id=${row.election.id})}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn btn-sm"
+                                    th:classappend="${row.election.open} ? 'btn-danger' : 'btn-dark'"
+                                    th:text="${row.election.open} ? 'Close voting' : 'Open voting'">Open</button>
+                        </form>
+                        <form style="display:inline"
+                              th:action="@{/polls/{id}/delete(id=${row.election.id})}" method="post"
+                              th:onsubmit="|return confirm('Delete this poll permanently?');|">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn btn-sm btn-danger"
+                                    th:disabled="${row.election.open or row.votes > 0}"
+                                    th:title="${(row.election.open ? 'Close the poll first. ' : '') + (row.votes > 0 ? 'This poll already has ballots and cannot be deleted.' : '')}">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card" th:if="${!#lists.isEmpty(rows)}">
+        <h3>How sharing works</h3>
+        <p class="small muted mb-0">
+            Tell people your <strong>code</strong> (e.g. <span class="code-chip">K7X2Q4</span>) or send the
+            link. They enter it on the ballot page (or open <code>/join/K7X2Q4</code>) to jump straight to
+            your poll. Votes stay open until you close the poll; results update live on the results page.
+        </p>
+    </section>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+
+<script>
+    function copyShare(btn) {
+        const code = btn.getAttribute('data-code');
+        const link = window.location.origin + '/join/' + code;
+        const done = function () {
+            const original = btn.textContent;
+            btn.textContent = 'Copied!';
+            btn.classList.add('btn-dark');
+            setTimeout(function () {
+                btn.textContent = original;
+                btn.classList.remove('btn-dark');
+            }, 1600);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(link).then(done, function () {
+                window.prompt('Copy this share link:', link);
+            });
+        } else {
+            window.prompt('Copy this share link:', link);
+        }
+    }
+</script>
+</body>
+</html>

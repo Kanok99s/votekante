@@ -7,30 +7,59 @@
 <div th:replace="~{fragments :: alerts}"></div>
 
 <main class="page">
-    <h1>Your ballot</h1>
-    <p class="muted" style="margin-top:-0.25rem;">
-        Choose one option per open election. Your selection is stored anonymously —
-        not even an administrator can see who voted for what.
-    </p>
+    <div class="subhead">
+        <div>
+            <h1>Your ballot</h1>
+            <p class="muted" style="margin-top:-0.25rem;">
+                Pick one option per open poll or election. Every vote is stored anonymously — not even an
+                administrator can see who voted for what.
+            </p>
+        </div>
+        <a class="btn btn-dark" th:href="@{/polls/new}">+ Create a poll</a>
+    </div>
 
-    <!-- no open elections -->
+    <!-- join a shared poll -->
+    <section class="card join-card">
+        <div>
+            <strong>Have a poll code?</strong>
+            <p class="muted small mb-0" style="margin-top:0.15rem;">
+                Someone shared a community poll with you — enter its code to jump straight to it.
+            </p>
+        </div>
+        <form th:action="@{/polls/join}" method="post" class="join-form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <input type="text" name="code" maxlength="6" required autocomplete="off"
+                   placeholder="K7X2Q4" aria-label="Poll code"
+                   style="text-transform:uppercase"/>
+            <button type="submit" class="btn btn-primary">Join</button>
+        </form>
+        <a class="btn btn-ghost btn-sm" th:href="@{/polls/mine}">My polls</a>
+    </section>
+
+    <!-- no open polls -->
     <div class="empty" th:if="${#lists.isEmpty(ballots)}">
         <div class="empty-icon">🗳️</div>
-        <strong>No election is open right now.</strong><br/>
-        <span class="small">Check back later, or view the latest results.</span>
-        <div class="mt-2">
+        <strong>No poll or election is open right now.</strong><br/>
+        <span class="small">Create one and share your code, or check the latest results.</span>
+        <div class="mt-2 pill-list" style="justify-content:center;">
+            <a class="btn btn-primary btn-sm" th:href="@{/polls/new}">Create a poll</a>
             <a class="btn btn-ghost btn-sm" th:href="@{/results}">View results</a>
         </div>
     </div>
 
-    <!-- one card per open election -->
+    <!-- one card per open election/poll -->
     <section class="section" th:each="item : ${ballots}">
-        <article class="card">
+        <article class="card" th:id="|poll-${item.election.id}|">
             <div class="card-head">
                 <div>
                     <h2 th:text="${item.election.name}">Election</h2>
                     <p class="muted small mb-0" th:if="${!#strings.isEmpty(item.election.description)}"
                        th:text="${item.election.description}">Description</p>
+                    <div class="poll-meta" th:if="${item.election.community}">
+                        <span class="badge badge-community">Community</span>
+                        <span class="small muted">by @<span th:text="${item.election.creator.username}">creator</span></span>
+                        <span class="code-chip" th:text="${'#' + item.election.joinCode}">CODE</span>
+                    </div>
                 </div>
                 <span class="badge" th:classappend="${item.alreadyVoted} ? 'badge-voted' : 'badge-open'"
                       th:text="${item.alreadyVoted} ? 'You voted' : 'Open'">Open</span>
@@ -43,8 +72,10 @@
                     <path d="M9 12.5l2 2 4-4.5"/>
                     <rect x="3.5" y="4" width="17" height="16" rx="3"/>
                 </svg>
-                Your vote in this election has been recorded. To reinforce anonymity,
+                Your vote in this poll has been recorded. To reinforce anonymity,
                 we cannot tell you which option you chose.
+                <a class="btn btn-sm btn-ghost" style="margin-left:auto"
+                   th:href="@{/results/{id}(id=${item.election.id})}">View results</a>
             </div>
 
             <!-- ballot form -->
@@ -65,7 +96,7 @@
                 </div>
 
                 <div class="empty small" th:if="${#lists.isEmpty(item.parties)}">
-                    This election has no candidates yet.
+                    This poll has no options yet.
                 </div>
 
                 <div th:unless="${#lists.isEmpty(item.parties)}">
@@ -78,7 +109,7 @@
                         <rect x="4" y="10" width="16" height="10" rx="2"/>
                         <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
                     </svg>
-                    One ballot per election. The vote is written to an anonymous table with a random
+                    One ballot per poll. The vote is written to an anonymous table with a random
                     identifier — there is no link back to your account.
                 </p>
             </form>

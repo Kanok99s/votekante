@@ -13,24 +13,33 @@
             <option th:each="e : ${elections}"
                     th:value="${e.id}"
                     th:selected="${election != null && e.id == election.id}"
-                    th:text="${e.name + (e.open ? ' (open)' : ' (closed)')}">Election</option>
+                    th:text="${e.name + (e.community ? ' (community)' : ' (official)') + (e.open ? ' · open' : ' · closed')}">Election</option>
         </select>
         <noscript><button class="btn btn-sm btn-ghost">Go</button></noscript>
     </form>
 
-    <!-- nothing seeded yet -->
+    <!-- nothing exists yet -->
     <div class="empty" th:if="${election == null}">
         <div class="empty-icon">📊</div>
         <strong>No results yet.</strong><br/>
-        <span class="small">An admin needs to create an election first.</span>
+        <span class="small">No election or poll has been created yet.</span>
     </div>
 
     <div th:if="${election != null}">
         <!-- hero summary -->
         <section class="results-hero">
             <h1 th:text="${election.name}">Election</h1>
-            <div class="meta" th:text="${election.open ? 'Live — ballots still being accepted' : 'Closed — final result'}">
-                status
+            <div class="meta">
+                <span th:if="${election.community}">
+                    Community poll by <strong style="color:#fff;">@<span th:text="${election.creator.username}">creator</span></strong>
+                    · code <span class="code-chip code-chip-light" th:text="${election.joinCode}">K7X2Q4</span>
+                    <button type="button" class="share-link" th:attr="data-code=${election.joinCode}"
+                            onclick="copyShare(this)">copy link</button>
+                </span>
+                <span th:if="${!election.community}">Official election</span>
+                <span th:text="${election.open ? ' · Live — ballots still being accepted' : ' · Closed — final result'}">
+                    · status
+                </span>
             </div>
             <div class="results-stats">
                 <div class="stat">
@@ -81,6 +90,27 @@
 </main>
 
 <footer th:replace="~{fragments :: footer}"></footer>
+
+<script>
+    function copyShare(btn) {
+        const code = btn.getAttribute('data-code');
+        const link = window.location.origin + '/join/' + code;
+        const done = function () {
+            const original = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(function () {
+                btn.textContent = original;
+            }, 1600);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(link).then(done, function () {
+                window.prompt('Copy this share link:', link);
+            });
+        } else {
+            window.prompt('Copy this share link:', link);
+        }
+    }
+</script>
 
 <script th:if="${election != null and totalVotes > 0}" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script th:if="${election != null and totalVotes > 0}" th:inline="javascript">
