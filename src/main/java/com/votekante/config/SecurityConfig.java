@@ -66,6 +66,16 @@ public class SecurityConfig {
             // CsrfTokenRequestAttributeHandler exposes the token as a request
             // attribute for every request, exactly what the templates expect.
             .csrf(csrf -> csrf.csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
+            // VoteKante is embedded in the owner's CV page(s) via <iframe>.
+            // Spring Security sends X-Frame-Options: DENY by default, which makes
+            // any external site render the app as a blank white box. Turning it
+            // off lets the CV (and preview URLs while building it) frame the app.
+            // NOTE: if you want only YOUR CV domain(s) to be allowed later, tell
+            // the app owner the origin(s) (e.g. https://cv.vercel.app) and we can
+            // swap this for a Content-Security-Policy "frame-ancestors ..." header
+            // that whitelists exactly those sites.
+            .headers(headers -> headers
+                .frameOptions(frameOptions -> frameOptions.disable()))
             .authorizeHttpRequests(auth -> auth
                 // Bootstrap + open pages
                 .requestMatchers("/", "/hello", "/css/**", "/js/**", "/images/**",
